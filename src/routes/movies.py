@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.database.session import get_db
+from database.session import get_db
 from src.database.models import MovieModel
 from src.schemas.movies import MovieDetailResponseSchema, MovieListResponseSchema
 
@@ -24,7 +24,11 @@ async def get_movies(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No movies found."
         )
-    total_pages = math.ceil(total_items / per_page)
+    total_pages = math.ceil(total_items / per_page) if total_items > 0 else 0
+    if total_pages == 0 or page > total_pages:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No movies found."
+        )
     offset = (page - 1) * per_page
     movies_query = select(MovieModel).offset(offset).limit(per_page)
     movies_result = await db.execute(movies_query)
