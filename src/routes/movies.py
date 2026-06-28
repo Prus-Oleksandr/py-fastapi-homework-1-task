@@ -33,6 +33,11 @@ async def get_movies(
     movies_query = select(MovieModel).offset(offset).limit(per_page)
     movies_result = await db.execute(movies_query)
     movies_list = movies_result.scalars().all()
+
+    if not movies_list:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No movies found."
+        )
     if page > 1:
         prev_page = f"/theater/movies/?page={page - 1}&per_page={per_page}"
     else:
@@ -42,6 +47,7 @@ async def get_movies(
         next_page = f"/theater/movies/?page={page + 1}&per_page={per_page}"
     else:
         next_page = None
+
     return {
         "movies": movies_list,
         "prev_page": prev_page,
